@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Flatsome pop-up element
  * Plugin URI: https://wordpress.org/plugins/flatsome-popup-element
- * Description: Add custom popup elemnet for Flatsome theme for advertisment
+ * Description: Add custom pop-up element for Flatsome theme for advertisment
  * Version: 1.0.0
  * Author: freelancerviet.net
  * Author URI: http://freelancerviet.net/
@@ -114,15 +114,17 @@ function fvn_flatsome_popup_ux_builder_element()
                 'unit' => '',
                 'min'   =>  0,
             ),
-            'content' => array(
-                'type' => 'text-editor',
-                'full_width' => true,
-            ),
+            
             'text_options' => array(
                 'type' => 'group',
                 'heading' => __('Text'),
                 'options' => array(
-
+                    'text_content' => array(
+                        'type' => 'text-editor',
+                        'heading' => 'Text box',
+                        'default' => '<h3>This is a simple headline</h3><p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>',
+                        'full-width' => true
+                    ),
                     'text_pos' => array(
                         'type' => 'select',
                         'heading' => __('Position'),
@@ -251,6 +253,10 @@ function fvn_flatsome_popup_ux_builder_element()
                             'desktop'=>'Desktop only',
                         ]
                     ),
+                    'donate' => array(
+                        'type' => 'textfield',
+                        'heading' => 'Donation <a href="https://www.paypal.me/vuonganhduong812">Paypal</a>'
+                    )
                 ),
             )
         ),
@@ -268,7 +274,7 @@ function fvn_flatsome_shortcode_popup($atts)
         'delay' => 0,
         'image_width' => '400px',
         'img'=>'',
-        'content' => ''
+        'text_content' => ''
     ), $atts));
     if(substr($image_width,-2) != 'px'){
         $image_width = (int)$image_width.'%';
@@ -289,7 +295,7 @@ function fvn_flatsome_shortcode_popup($atts)
                 
             </a>
             <div class="box-text" style="position:absolute;top:0;left:0;padding:20px">
-                <div class="box"><?php echo $content ?></div>
+                <div class="box"><?php echo $text_content ?></div>
             </div>
             <a href="javascript:void(0)" class="fvn-close" onclick="">&#10005;</a>
         </div>
@@ -312,16 +318,19 @@ function fvn_flatsome_shortcode_popup($atts)
         }
         .fvn-close{
             position: absolute;
-            right: -30px;
+            right: -15px;
             width: 30px;
             height: 30px;
             border-radius: 50%;
             border: 3px solid white;
-            top: 0;
+            top: -15px;
             color:white;
             background: black;
             text-align: center;
             line-height: 22px;
+        }
+        .fvn-close:hover{
+            color:silver;
         }
     </style>
     <script>
