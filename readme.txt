@@ -15,7 +15,7 @@ Add custom pop-up element for Flatsome theme for advertisment
 == Description ==
 
 Add custom pop-up element for Flatsome theme for advertisment
-
+Show up on UX builder mode for customizing more easier
 
 == Installation ==
 

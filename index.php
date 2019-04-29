@@ -119,12 +119,6 @@ function fvn_flatsome_popup_ux_builder_element()
                 'type' => 'group',
                 'heading' => __('Text'),
                 'options' => array(
-                    'text_content' => array(
-                        'type' => 'text-editor',
-                        'heading' => 'Text box',
-                        'default' => '<h3>This is a simple headline</h3><p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.</p>',
-                        'full-width' => true
-                    ),
                     'text_pos' => array(
                         'type' => 'select',
                         'heading' => __('Position'),
@@ -264,21 +258,38 @@ function fvn_flatsome_popup_ux_builder_element()
 }
 add_action('ux_builder_setup', 'fvn_flatsome_popup_ux_builder_element');
 
-function fvn_flatsome_shortcode_popup($atts)
+function fvn_flatsome_shortcode_popup($atts,$content = null )
 {
     extract(shortcode_atts(array(
         'number'    => '0',
         'image' => '',
         'visible' => 'visible',
-        '_id' => 'pop-up'.rand(10,100),
+        '_id' => 'pop-up'.rand(1,100),
         'delay' => 0,
         'image_width' => '400px',
         'img'=>'',
-        'text_content' => ''
+        'text_pos' => '',
+        'text_bg' => '',
+        'text_hover' => '',
+        'text_align' => 'center',
+        'text_size' => '',
+        'text_color' => '',
     ), $atts));
     if(substr($image_width,-2) != 'px'){
         $image_width = (int)$image_width.'%';
     }
+    $css_args = array(
+		array( 'attribute' => 'background-color', 'value' => $text_bg ),
+		array( 'attribute' => 'padding', 'value' => $text_padding ),
+    );
+    $classes_box = [];
+    $classes_text = [];
+    if ( $atts['text_pos'] ) $classes_box[] = 'box-text-' . $atts['text_pos'];
+    if ( $atts['text_hover'] ) $classes_text[] = 'show-on-hover hover-' . $atts['text_hover'];
+	if ( $atts['text_align'] ) $classes_text[] = 'text-' . $atts['text_align'];
+	if ( $atts['text_size'] ) $classes_text[] = 'is-' . $atts['text_size'];
+    if ( $atts['text_color'] == 'dark' ) $classes_text[] = 'dark';
+    // echo '<pre>';print_r($atts);print_r($classes_text);die;
     ob_start();
     $mobile = wp_is_mobile();
     // print_r($atts);
@@ -287,36 +298,49 @@ function fvn_flatsome_shortcode_popup($atts)
         return;
     }
     ?>
-    <div id="<?php echo $_id?>-bg" class="fvn-popup-bg">
-        <div id="<?php echo $_id?>" class="fvn-popup <?php  echo $class?>" style="width:<?php echo $mobile ? '300px' : $image_width?>">
+    <div id="<?php echo $_id?>-bg" class="fvn-popup-bg <?php echo $class?>">
+        <div id="<?php echo $_id?>" class="box fvn-popup <?php  echo implode(" ",$classes_box)?>" style="width:<?php echo $mobile ? '300px' : $image_width?>">
             <a target="<?php echo $target?>" href="<?php  echo $link?$link:'#'?>" rel="<?php echo $rel?>">
                 <img style="width:100%" src="<?php echo wp_get_attachment_image_src( $img, $image_size, false )[0]?>" alt="">
 
-                
-            </a>
-            <div class="box-text" style="position:absolute;top:0;left:0;padding:20px">
-                <div class="box"><?php echo $text_content ?></div>
-            </div>
+
+                <div class="box-text <?php echo implode( ' ', $classes_text ); ?>" <?php echo fvn_get_shortcode_inline_css( $css_args ); ?> >
+                    <div class="box-text-inner">
+                        <?php echo flatsome_contentfix( $content ); ?>
+                    </div><!-- box-text-inner -->
+                </div><!-- box-text -->
+            </a>           
+
             <a href="javascript:void(0)" class="fvn-close" onclick="">&#10005;</a>
         </div>
     </div>
     
     <style>
+        
         .fvn-popup-bg{
             position: fixed;
             left: 0;
             top: 0;
             width: 100%;        
             display: none;          
-            background: rgba(100, 100, 100, 0.5);      
+            background: rgba(100, 100, 100, 0.5);    
+            z-index: 2;  
+            <?php if(sanitize_text_field($_REQUEST['ux_builder_action']) == 'do_shortcode'){ echo "display:block;";}?>
         }
+        
         .fvn-popup{
             margin: 0 auto;
             position: relative;
             margin-top: 150px;
             background: white;
         }
-        .fvn-close{
+        .fvn-popup .box-text{
+            position: absolute;
+            left: 0;
+            top: 0;
+            padding:20px;
+        }
+        .fvn-popup-bg .fvn-popup .fvn-close{
             position: absolute;
             right: -15px;
             width: 30px;
@@ -342,13 +366,22 @@ function fvn_flatsome_shortcode_popup($atts)
         });
         bg_element.querySelector('.fvn-close').addEventListener('click', function() {
             bg_element.style.display = 'none';
-        });
-        document.getElementById('<?php echo $_id?>').style.marginTop = parseInt((window.innerHeight-document.getElementById('<?php echo $_id?>').height)/2)+'px';
+        });        
         setTimeout(function(){
             document.getElementById('<?php echo $_id?>-bg').style.display = 'block';
+            document.getElementById('<?php echo $_id?>').style.marginTop = parseInt((window.innerHeight - document.getElementById('<?php echo $_id?>').offsetHeight )/2)+'px';
         },<?php echo (int)($delay*1000) ?>);
     </script>
     <?php 
     return ob_get_clean();
 }
 add_shortcode('ux_fvn_popup', 'fvn_flatsome_shortcode_popup');
+
+function fvn_get_shortcode_inline_css($args){
+    $style = '';
+      foreach ($args as $key => $value) {
+        $unit = array_key_exists( 'unit', $value ) ? $value['unit'] : null;
+        if($value['value']) $style .=  $value['attribute'].':'.$value['value'].$unit.';';
+       }
+    if($style) return 'style="'.$style.'"';
+}
