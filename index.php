@@ -69,13 +69,13 @@ function fvn_flatsome_popup_ux_builder_element()
                     'image_radius' => array(
                         'type' => 'slider',
                         'heading' => __('Radius'),
-                        'unit' => '%',
+                        'unit' => 'px',
                         'default' => 0,
                         'max' => 100,
                         'min' => 0,
                         'on_change' => array(
-                            'selector' => '.box-image-inner',
-                            'style' => 'border-radius: {{ value }}%'
+                            'selector' => '.fvn-popup',
+                            'style' => 'border-radius: {{ value }}px'
                         )
                     ),
 
@@ -91,17 +91,16 @@ function fvn_flatsome_popup_ux_builder_element()
                             'original' => 'Original',
                         )
                     ),
-
-                    'image_overlay' => array(
-                        'type' => 'colorpicker',
-                        'heading' => __('Overlay'),
-                        'default' => '',
-                        'alpha' => true,
-                        'format' => 'rgb',
-                        'position' => 'bottom right',
+                    'image_padding' => array(
+                        'type' => 'slider',
+                        'heading' => __('Border'),
+                        'unit' => 'px',
+                        'default' => 0,
+                        'max' => 100,
+                        'min' => 0,
                         'on_change' => array(
-                            'selector' => '.overlay',
-                            'style' => 'background-color: {{ value }}'
+                            'selector' => '.fvn-popup',
+                            'style' => 'fvn-popup: {{ value }}px'
                         )
                     ),
                 ),
@@ -124,6 +123,7 @@ function fvn_flatsome_popup_ux_builder_element()
                         'heading' => __('Position'),
                         'default' => 'bottom',
                         'options' => array(
+                            '' => 'Top',                            
                             'middle' => 'Middle',
                             'bottom' => 'Bottom',
                         ),
@@ -278,18 +278,20 @@ function fvn_flatsome_shortcode_popup($atts,$content = null )
     if(substr($image_width,-2) != 'px'){
         $image_width = (int)$image_width.'%';
     }
-    $css_args = array(
-		array( 'attribute' => 'background-color', 'value' => $text_bg ),
+    $css_args = array(		
 		array( 'attribute' => 'padding', 'value' => $text_padding ),
     );
+    if($text_bg){
+        $css_args[] = array( 'attribute' => 'background-color', 'value' => $text_bg );
+    }
     $classes_box = [];
     $classes_text = [];
-    if ( $atts['text_pos'] ) $classes_box[] = 'box-text-' . $atts['text_pos'];
+    if ( $atts['text_pos'] ) $classes_box[] = $atts['text_pos'];
     if ( $atts['text_hover'] ) $classes_text[] = 'show-on-hover hover-' . $atts['text_hover'];
 	if ( $atts['text_align'] ) $classes_text[] = 'text-' . $atts['text_align'];
 	if ( $atts['text_size'] ) $classes_text[] = 'is-' . $atts['text_size'];
     if ( $atts['text_color'] == 'dark' ) $classes_text[] = 'dark';
-    // echo '<pre>';print_r($atts);print_r($classes_text);die;
+    // echo '<pre>';print_r($atts);print_r($css_args);
     ob_start();
     $mobile = wp_is_mobile();
     // print_r($atts);
@@ -299,12 +301,16 @@ function fvn_flatsome_shortcode_popup($atts,$content = null )
     }
     ?>
     <div id="<?php echo $_id?>-bg" class="fvn-popup-bg <?php echo $class?>">
-        <div id="<?php echo $_id?>" class="box fvn-popup <?php  echo implode(" ",$classes_box)?>" style="width:<?php echo $mobile ? '300px' : $image_width?>">
-            <a target="<?php echo $target?>" href="<?php  echo $link?$link:'#'?>" rel="<?php echo $rel?>">
-                <img style="width:100%" src="<?php echo wp_get_attachment_image_src( $img, $image_size, false )[0]?>" alt="">
+        <div id="<?php echo $_id?>" class="box fvn-popup <?php  echo implode(" ",$classes_box)?>" style="<?php 
+        echo $mobile ? 'width:300px;' : 'width:'.$image_width.';';
+        echo $atts['image_radius'] ? 'border-radius:'.$atts['image_radius'].'px;' : '';        
+        echo $atts['image_padding'] ? 'padding:'.$atts['image_padding'].'px;' : '';
+        ?>">
+            <a target="<?php echo $target?>" href="<?php  echo $link?$link:'#'?>" rel="<?php echo $rel?>" >
+                <img style="width:100%;<?php ?>" src="<?php echo wp_get_attachment_image_src( $img, $image_size, false )[0]?>" alt="" />
 
 
-                <div class="box-text <?php echo implode( ' ', $classes_text ); ?>" <?php echo fvn_get_shortcode_inline_css( $css_args ); ?> >
+                <div class="box-text <?php echo implode( ' ', $classes_text ); ?>" <?php echo fvn_get_shortcode_inline_css( $css_args ); ?>>
                     <div class="box-text-inner">
                         <?php echo flatsome_contentfix( $content ); ?>
                     </div><!-- box-text-inner -->
@@ -324,7 +330,7 @@ function fvn_flatsome_shortcode_popup($atts,$content = null )
             width: 100%;        
             display: none;          
             background: rgba(100, 100, 100, 0.5);    
-            z-index: 2;  
+            z-index: 999;  
             <?php if(sanitize_text_field($_REQUEST['ux_builder_action']) == 'do_shortcode'){ echo "display:block;";}?>
         }
         
@@ -340,6 +346,17 @@ function fvn_flatsome_shortcode_popup($atts,$content = null )
             top: 0;
             padding:20px;
         }
+        .fvn-popup.bottom .box-text{
+            bottom:0;
+            top: inherit;
+        }
+        .fvn-popup.middle .box-text{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background:green;
+        } 
         .fvn-popup-bg .fvn-popup .fvn-close{
             position: absolute;
             right: -15px;
@@ -366,7 +383,8 @@ function fvn_flatsome_shortcode_popup($atts,$content = null )
         });
         bg_element.querySelector('.fvn-close').addEventListener('click', function() {
             bg_element.style.display = 'none';
-        });        
+        });  
+        
         setTimeout(function(){
             document.getElementById('<?php echo $_id?>-bg').style.display = 'block';
             document.getElementById('<?php echo $_id?>').style.marginTop = parseInt((window.innerHeight - document.getElementById('<?php echo $_id?>').offsetHeight )/2)+'px';
