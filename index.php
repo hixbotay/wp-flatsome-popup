@@ -123,7 +123,7 @@ function fvn_flatsome_popup_ux_builder_element()
                         'heading' => __('Position'),
                         'default' => 'bottom',
                         'options' => array(
-                            '' => 'Top',                            
+                            'top' => 'Top',                            
                             'middle' => 'Middle',
                             'bottom' => 'Bottom',
                         ),
@@ -268,7 +268,7 @@ function fvn_flatsome_shortcode_popup($atts,$content = null )
         'delay' => 0,
         'image_width' => '400px',
         'img'=>'',
-        'text_pos' => '',
+        'text_pos' => 'bottom',
         'text_bg' => '',
         'text_hover' => '',
         'text_align' => 'center',
@@ -286,7 +286,7 @@ function fvn_flatsome_shortcode_popup($atts,$content = null )
     }
     $classes_box = [];
     $classes_text = [];
-    if ( $atts['text_pos'] ) $classes_box[] = $atts['text_pos'];
+    $classes_box[] = $text_pos;
     if ( $atts['text_hover'] ) $classes_text[] = 'show-on-hover hover-' . $atts['text_hover'];
 	if ( $atts['text_align'] ) $classes_text[] = 'text-' . $atts['text_align'];
 	if ( $atts['text_size'] ) $classes_text[] = 'is-' . $atts['text_size'];
